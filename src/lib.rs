@@ -10,11 +10,16 @@ enum Op {
     Flush
 }
 
+/// A Printer is a buffering write which flushes at
+/// a specified interval, clearing the display of any
+/// lines of text previously written
 pub struct Printer {
     writes: Arc<Mutex<Sender<Op>>>
 }
 
 impl Printer {
+    /// Creates a new Printer instance that delegates writes to the provided
+    /// Write instance delayed at the interval provided
     pub fn new<W>(mut writer: W, interval: Duration) -> Printer where W: Write + Send + 'static {
         let (tx, rx) = channel();
         let shared = Arc::new(Mutex::new(tx));
@@ -30,7 +35,6 @@ impl Printer {
                 let _ = sleeper.lock().unwrap().send(Op::Flush);
             }
         });
-
 
         thread::spawn(move || {
             let mut buffer = vec![];
@@ -50,16 +54,15 @@ impl Printer {
                             // clear lines
                             for _ in 0..lines {
                                 let _ = write!(writer, "\x1B[0A"); // move the cursor up
-                                let _ = write!(writer, "\x1B[2K\r") ;  // Clear the line
+                                let _ = write!(writer, "\x1B[2K\r");  // Clear the line
                             }
-                            let mut line_count = 0;
+                            lines = 0;
                             for b in buffer.iter() {
                                 if *b == ('\n' as u8) {
-                                    line_count += 1;
+                                    lines += 1;
                                 }
                             }
 
-                            lines = line_count;
                             let _ = writer.write(&buffer);
                             let _ = writer.flush();
                             buffer.clear();
