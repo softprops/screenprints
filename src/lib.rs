@@ -8,6 +8,7 @@ enum Op {
     Write(Vec<u8>),
     Clear,
     Flush,
+    Close,
 }
 
 /// A Printer is a buffering write which flushes at
@@ -29,10 +30,17 @@ impl Printer {
         let writes = shared.clone();
         let printer = Printer { writes: writes };
 
+        let (closer, closing) = channel();
+
         thread::spawn(move || {
             loop {
+                if let Ok(_) = closing.try_recv() {
+                    return;
+                }
                 thread::sleep(interval);
-                let _ = sleeper.lock().unwrap().send(Op::Flush);
+                if let Ok(s) = sleeper.lock() {
+                    let _ = s.send(Op::Flush);
+                }
             }
         });
 
@@ -43,10 +51,13 @@ impl Printer {
                 match rx.recv() {
                     Ok(op) => {
                         match op {
-                            Op::Write(data) => buffer.extend(data),
                             Op::Clear => {
                                 buffer.clear();
                                 lines = 0
+                            }
+                            Op::Close => {
+                                let _ = closer.send(());
+                                return;
                             }
                             Op::Flush => {
                                 if buffer.is_empty() {
@@ -68,17 +79,24 @@ impl Printer {
                                 let _ = writer.flush();
                                 buffer.clear();
                             }
+                            Op::Write(data) => buffer.extend(data),
                         }
                     }
-                    _ => return,
+                    _ => ()
                 }
             }
         });
         printer
     }
 
+    /// clear the current buffer and reset linecount
     pub fn clear(&self) {
         let _ = self.writes.lock().unwrap().send(Op::Clear);
+    }
+
+    /// close the printer, afterwhich all writes will be discarded
+    pub fn close(&self) {
+        let _ = self.writes.lock().unwrap().send(Op::Close);
     }
 }
 
@@ -94,5 +112,10 @@ impl Write for Printer {
     }
 }
 
+impl Drop for Printer {
+    fn drop(&mut self) {
+        self.close();
+    }
+}
 #[test]
 fn it_works() {}
