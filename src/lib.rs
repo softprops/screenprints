@@ -68,12 +68,7 @@ impl Printer {
                                     let _ = write!(writer, "\x1B[0A"); // move the cursor up
                                     let _ = write!(writer, "\x1B[2K\r");  // Clear the line
                                 }
-                                lines = 0;
-                                for b in buffer.iter() {
-                                    if *b == ('\n' as u8) {
-                                        lines += 1;
-                                    }
-                                }
+                                lines = buffer.iter().filter(|&b| *b == ('\n' as u8)).count();
 
                                 let _ = writer.write(&buffer);
                                 let _ = writer.flush();
