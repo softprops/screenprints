@@ -33,6 +33,9 @@ fn main() {
 }
 ```
 
+The result should look something like the following
+
+[![asciicast](https://asciinema.org/a/9auhm32umebr14bulaifhynni.png)](https://asciinema.org/a/9auhm32umebr14bulaifhynni)
 
 
 Doug Tangren (softprops) 2016
