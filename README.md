@@ -26,7 +26,7 @@ fn main() {
     let mut printer = Printer::new(stdout(), Duration::from_millis(10));
     for f in vec!["foo.txt", "bar.txt", "baz.txt"] {
         for i in 0..51 {
-            let _ = write!(p, "Downloading {}.. ({}/{}) GB\n", f, i, 50);
+            let _ = write!(printer, "Downloading {}.. ({}/{}) GB\n", f, i, 50);
             thread::sleep(Duration::from_millis(50));
         }
     }
