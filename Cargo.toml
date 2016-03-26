@@ -2,3 +2,9 @@
 name = "screenprints"
 version = "0.1.0"
 authors = ["softprops <d.tangren@gmail.com>"]
+description = "reprints for your terminal screen"
+documentation = "https://softprops.github.io/screenprints"
+homepage = "https://github.com/softprops/screenprints"
+repository = "https://github.com/softprops/screenprints"
+keywords = ["terminal", "tui", "console"]
+license = "MIT"
