@@ -1,3 +1,6 @@
+//! # Screenprints
+//!
+//! Screensprints is a terminal interface tool.
 use std::io::{Result, Write};
 use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Mutex};
@@ -11,7 +14,7 @@ enum Op {
     Close,
 }
 
-/// A Printer is a buffering write which flushes at
+/// A Printer buffers writes and flushes at
 /// a specified interval, clearing the display of any
 /// lines of text previously written
 pub struct Printer {
@@ -21,15 +24,17 @@ pub struct Printer {
 impl Printer {
     /// Creates a new Printer instance that delegates writes to the provided
     /// Write instance delayed at the interval provided
-    pub fn new<W>(mut writer: W, interval: Duration) -> Printer
+    pub fn new<W>(mut underlying: W, interval: Duration) -> Printer
         where W: Write + Send + 'static
     {
-        let (tx, rx) = channel();
-        let shared = Arc::new(Mutex::new(tx));
-        let sleeper = shared.clone();
-        let writes = shared.clone();
-        let printer = Printer { writes: writes };
+        // write op signals
+        let (writer, writes) = channel();
+        let writers = Arc::new(Mutex::new(writer));
+        let sleeper = writers.clone();
+        let forwards = writers.clone();
+        let printer = Printer { writes: forwards };
 
+        // inter thread close signals
         let (closer, closing) = channel();
 
         thread::spawn(move || {
@@ -48,7 +53,7 @@ impl Printer {
             let mut buffer = vec![];
             let mut lines = 0;
             loop {
-                match rx.recv() {
+                match writes.recv() {
                     Ok(op) => {
                         match op {
                             Op::Clear => {
@@ -65,13 +70,13 @@ impl Printer {
                                 }
                                 // clear lines
                                 for _ in 0..lines {
-                                    let _ = write!(writer, "\x1B[0A"); // move the cursor up
-                                    let _ = write!(writer, "\x1B[2K\r");  // Clear the line
+                                    let _ = write!(underlying, "\x1B[0A"); // Move the cursor up
+                                    let _ = write!(underlying, "\x1B[2K\r");  // Clear the line
                                 }
                                 lines = buffer.iter().filter(|&b| *b == ('\n' as u8)).count();
 
-                                let _ = writer.write(&buffer);
-                                let _ = writer.flush();
+                                let _ = underlying.write(&buffer);
+                                let _ = underlying.flush();
                                 buffer.clear();
                             }
                             Op::Write(data) => buffer.extend(data),

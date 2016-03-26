@@ -5,4 +5,4 @@ test:
 	@cargo test
 
 example:
-	@cargo run --example screen
+	@cargo run --example progress
