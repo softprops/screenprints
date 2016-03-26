@@ -82,7 +82,7 @@ impl Printer {
                             Op::Write(data) => buffer.extend(data),
                         }
                     }
-                    _ => ()
+                    _ => (),
                 }
             }
         });
