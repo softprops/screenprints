@@ -17,6 +17,7 @@ Screensprints defines a `Printer` which implements [std::io::Write](https://doc.
 
 ```rust
 extern crate screenprints;
+
 use screenprints::Printer;
 use std::io::{stdout, Write};
 use std::time::Duration;
