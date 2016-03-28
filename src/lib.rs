@@ -53,36 +53,33 @@ impl Printer {
             let mut buffer = vec![];
             let mut lines = 0;
             loop {
-                match writes.recv() {
-                    Ok(op) => {
-                        match op {
-                            Op::Clear => {
-                                buffer.clear();
-                                lines = 0
-                            }
-                            Op::Close => {
-                                let _ = closer.send(());
-                                return;
-                            }
-                            Op::Flush => {
-                                if buffer.is_empty() {
-                                    continue;
-                                }
-                                // clear lines
-                                for _ in 0..lines {
-                                    let _ = write!(underlying, "\x1B[0A"); // Move the cursor up
-                                    let _ = write!(underlying, "\x1B[2K\r");  // Clear the line
-                                }
-                                lines = buffer.iter().filter(|&b| *b == ('\n' as u8)).count();
-
-                                let _ = underlying.write(&buffer);
-                                let _ = underlying.flush();
-                                buffer.clear();
-                            }
-                            Op::Write(data) => buffer.extend(data),
+                if let Ok(op) = writes.recv() {
+                    match op {
+                        Op::Clear => {
+                            buffer.clear();
+                            lines = 0
                         }
+                        Op::Close => {
+                            let _ = closer.send(());
+                            return;
+                        }
+                        Op::Flush => {
+                            if buffer.is_empty() {
+                                continue;
+                            }
+                            // clear lines
+                            for _ in 0..lines {
+                                let _ = write!(underlying, "\x1B[0A"); // Move the cursor up
+                                let _ = write!(underlying, "\x1B[2K\r");  // Clear the line
+                            }
+                            lines = buffer.iter().filter(|&b| *b == b'\n').count();
+
+                            let _ = underlying.write(&buffer);
+                            let _ = underlying.flush();
+                            buffer.clear();
+                        }
+                        Op::Write(data) => buffer.extend(data),
                     }
-                    _ => (),
                 }
             }
         });
