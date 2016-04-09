@@ -1,5 +1,6 @@
 [package]
 name = "screenprints"
+# Remember to also update in appveyor.yml
 version = "0.1.0"
 authors = ["softprops <d.tangren@gmail.com>"]
 description = "reprints for your terminal screen"
