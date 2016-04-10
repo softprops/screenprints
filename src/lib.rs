@@ -7,6 +7,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::thread;
 
+mod os;
+
 enum Op {
     Write(Vec<u8>),
     Clear,
@@ -69,8 +71,7 @@ impl Printer {
                             }
                             // clear lines
                             for _ in 0..lines {
-                                let _ = write!(underlying, "\x1B[0A"); // Move the cursor up
-                                let _ = write!(underlying, "\x1B[2K\r");  // Clear the line
+                                os::clear_line_move_one_up(&mut underlying);
                             }
                             lines = buffer.iter().filter(|&b| *b == b'\n').count();
 
@@ -114,5 +115,6 @@ impl Drop for Printer {
         self.close();
     }
 }
+
 #[test]
 fn it_works() {}

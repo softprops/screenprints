@@ -1,5 +1,6 @@
 [package]
 name = "screenprints"
+# Remember to also update in appveyor.yml
 version = "0.1.0"
 authors = ["softprops <d.tangren@gmail.com>"]
 description = "reprints for your terminal screen"
@@ -8,3 +9,7 @@ homepage = "https://github.com/softprops/screenprints"
 repository = "https://github.com/softprops/screenprints"
 keywords = ["terminal", "tui", "console"]
 license = "MIT"
+
+[dependencies]
+kernel32-sys = "0.2"
+winapi = "0.2"
